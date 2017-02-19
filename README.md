@@ -1,4 +1,4 @@
-# Boxie [![GoDoc](https://godoc.org/github.com/itsmontoya/boxie?status.svg)](https://godoc.org/github.com/itsmontoya/boxie) ![Status](https://img.shields.io/badge/status-alpha-red.svg)
+# Boxie [![GoDoc](https://godoc.org/github.com/itsmontoya/boxxy?status.svg)](https://godoc.org/github.com/itsmontoya/boxxy) ![Status](https://img.shields.io/badge/status-alpha-red.svg)
 
 Boxie is a sharded slice solution which offers:
 - Appending

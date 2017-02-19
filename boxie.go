@@ -1,4 +1,4 @@
-package boxie
+package boxxy
 
 func New() *Boxie {
 	var b Boxie

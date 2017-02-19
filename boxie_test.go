@@ -1,4 +1,4 @@
-package boxie
+package boxxy
 
 import (
 	"strconv"
