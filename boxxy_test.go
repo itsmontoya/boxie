@@ -54,15 +54,11 @@ func BenchmarkSliceGet_1000000(b *testing.B) {
 }
 
 func BenchmarkBoxxyForEach(b *testing.B) {
-	b.StopTimer()
-	bx := New()
-	for i := 0; i < b.N; i++ {
-		bx.Append(i)
-	}
-	b.StartTimer()
+	bx := populatedBoxxy(100000)
+	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
-		bx.ForEach(func(i int, v interface{}) (end bool) {
+		bx.ForEach(func(_ int, v interface{}) (end bool) {
 			testVal = v
 			return
 		})
@@ -71,12 +67,8 @@ func BenchmarkBoxxyForEach(b *testing.B) {
 }
 
 func BenchmarkSliceForEach(b *testing.B) {
-	b.StopTimer()
-	var s []interface{}
-	for i := 0; i < b.N; i++ {
-		s = append(s, i)
-	}
-	b.StartTimer()
+	s := populatedSlice(100000)
+	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
 		for _, v := range s {
