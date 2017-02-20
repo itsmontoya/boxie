@@ -18,7 +18,10 @@ func TestBasic(t *testing.T) {
 	b.Insert(51, "w00t")
 	b.Insert(2, "scoot")
 	b.Prepend("beginning")
-	fmt.Println(b.Get(53))
+	fmt.Println("Get 53", b.Get(53))
+	fmt.Println("Get 51", b.Get(51))
+	fmt.Println("Get 2", b.Get(0))
+	fmt.Println(b.bs[1])
 
 	//	b.ForEach(func(i int, val interface{}) (end bool) {
 	//fmt.Println(i, val)
@@ -26,32 +29,28 @@ func TestBasic(t *testing.T) {
 	//	})
 }
 
-func BenchmarkBoxieGet(b *testing.B) {
-	b.StopTimer()
-	bx := New()
-	for i := 0; i < b.N; i++ {
-		bx.Append(i)
-	}
-	b.StartTimer()
-
-	for i := 0; i < b.N; i++ {
-		testVal = bx.Get(i)
-	}
-	b.ReportAllocs()
+func BenchmarkBoxieGet_10000(b *testing.B) {
+	benchmarkBoxieGet(b, 10000)
 }
 
-func BenchmarkSliceGet(b *testing.B) {
-	b.StopTimer()
-	var s []interface{}
-	for i := 0; i < b.N; i++ {
-		s = append(s, i)
-	}
-	b.StartTimer()
+func BenchmarkBoxieGet_100000(b *testing.B) {
+	benchmarkBoxieGet(b, 100000)
+}
 
-	for i := 0; i < b.N; i++ {
-		testVal = s[i]
-	}
-	b.ReportAllocs()
+func BenchmarkBoxieGet_1000000(b *testing.B) {
+	benchmarkBoxieGet(b, 1000000)
+}
+
+func BenchmarkSliceGet_10000(b *testing.B) {
+	benchmarkSliceGet(b, 10000)
+}
+
+func BenchmarkSliceGet_100000(b *testing.B) {
+	benchmarkSliceGet(b, 100000)
+}
+
+func BenchmarkSliceGet_1000000(b *testing.B) {
+	benchmarkSliceGet(b, 1000000)
 }
 
 func BenchmarkBoxieForEach(b *testing.B) {
@@ -121,4 +120,52 @@ func BenchmarkSlicePrepend(b *testing.B) {
 	}
 
 	b.ReportAllocs()
+}
+
+func benchmarkBoxieGet(b *testing.B, n int) {
+	b.StopTimer()
+	bx := populatedBoxie(n)
+	b.StartTimer()
+
+	for i := 0; i < b.N; i++ {
+		for j := 0; j < n; j++ {
+			testVal = bx.Get(j)
+		}
+	}
+
+	b.ReportAllocs()
+}
+
+func benchmarkSliceGet(b *testing.B, n int) {
+	b.StopTimer()
+	s := populatedSlice(n)
+	b.StartTimer()
+
+	for i := 0; i < b.N; i++ {
+		for j := 0; j < n; j++ {
+			testVal = s[j]
+		}
+	}
+
+	b.ReportAllocs()
+}
+
+func populatedBoxie(n int) (b *Boxxy) {
+	b = New()
+
+	for i := 0; i < n; i++ {
+		b.Append(i)
+	}
+
+	return
+}
+
+func populatedSlice(n int) (s []int) {
+	s = make([]int, n)
+
+	for i := 0; i < n; i++ {
+		s[i] = i
+	}
+
+	return
 }

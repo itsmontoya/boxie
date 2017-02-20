@@ -1,32 +1,50 @@
 package boxxy
 
-func New() *Boxie {
-	var b Boxie
-	b.bs = append(b.bs, newBlock())
+import (
+//	"fmt"
+)
+
+// New will return a new instance of Boxxie
+func New() *Boxxy {
+	var b Boxxy
+	b.bs = append(b.bs, newBlock(0))
 	return &b
 }
 
-type Boxie struct {
+// Boxxy is a sharded slice
+type Boxxy struct {
 	bs   []*block
 	tail int
 }
 
-func (b *Boxie) getContainingBucketIdx(idx int) (i, rem int) {
-	var ci int
-	for bi, b := range b.bs {
-		if idx >= ci && idx < ci+b.tail {
-			i = bi
-			rem = idx - ci
-			return
+func (b *Boxxy) getContainingBucketIdx(idx int) (i, rem int) {
+	guess := idx / 32
+	if guess > b.tail {
+		guess = b.tail
+	}
+
+	for {
+		gos := b.bs[guess].offset
+		gt := b.bs[guess].tail
+		if gos > idx {
+			guess--
+			continue
 		}
 
-		ci += b.tail
+		if gos+gt < idx {
+			guess++
+			continue
+		}
+
+		i = guess
+		rem = idx - gos
+		return
 	}
 
 	return -1, 0
 }
 
-func (b *Boxie) shiftRight(idx int) {
+func (b *Boxxy) shiftRight(idx int) {
 	var cb *block
 	for i, item := range b.bs[idx:] {
 		b.bs[i] = cb
@@ -38,7 +56,7 @@ func (b *Boxie) shiftRight(idx int) {
 }
 
 // Get will get an item at a provided index
-func (b *Boxie) Get(idx int) interface{} {
+func (b *Boxxy) Get(idx int) interface{} {
 	bi, rem := b.getContainingBucketIdx(idx)
 
 	if bi == -1 {
@@ -50,30 +68,44 @@ func (b *Boxie) Get(idx int) interface{} {
 }
 
 // Append will append an item to the list
-func (b *Boxie) Append(val interface{}) {
+func (b *Boxxy) Append(val interface{}) {
 	lb := b.bs[b.tail]
 	if lb == nil || !lb.append(val) {
-		lb = newBlock()
+		// Last block's offset
+		po := b.bs[b.tail].offset
+		// Last block's tail
+		pt := b.bs[b.tail].tail
+
+		lb = newBlock(po + pt)
 		lb.append(val)
+
 		b.bs = append(b.bs, lb)
 		b.tail++
 	}
 }
 
+func (b *Boxxy) incrementOffset(start int) {
+	for i := start; i < len(b.bs); i++ {
+		b.bs[i].offset++
+	}
+}
+
 // Prepend will insert an item to the beginning of the list
-func (b *Boxie) Prepend(val interface{}) {
+func (b *Boxxy) Prepend(val interface{}) {
 	fb := b.bs[0]
 	if fb == nil || !fb.prepend(val) {
-		fb = newBlock()
+		fb = newBlock(0)
 		// Since this is our first item, we know we can append (it's faster)
 		fb.append(val)
 		b.shiftRight(0)
 		b.bs[0] = fb
 	}
+
+	b.incrementOffset(1)
 }
 
 // Insert will place an item at the requested index within a list
-func (b *Boxie) Insert(idx int, val interface{}) {
+func (b *Boxxy) Insert(idx int, val interface{}) {
 	bi, rem := b.getContainingBucketIdx(idx)
 	if bi == -1 {
 		// ERROR OUT OF RANGE
@@ -88,105 +120,35 @@ func (b *Boxie) Insert(idx int, val interface{}) {
 
 	bi++
 	if bi > b.tail {
-		blk = newBlock()
+		blk = newBlock(idx)
 		blk.append(of)
 		b.bs = append(b.bs, blk)
 		b.tail++
-		return
+		goto END
 	}
 
 	blk = b.bs[bi]
 	if blk.prepend(of) {
-		return
+		goto END
 	}
 
-	blk = newBlock()
+	blk = newBlock(idx)
 	blk.append(of)
 	b.shiftRight(bi)
 	b.bs[bi] = blk
+
+END:
+	b.incrementOffset(idx + 1)
 }
 
 // ForEach will iterate through each item within Boxie
-func (b *Boxie) ForEach(fn func(i int, val interface{}) (end bool)) (ended bool) {
-	var offset int
+func (b *Boxxy) ForEach(fn func(i int, val interface{}) (end bool)) (ended bool) {
 	for _, b := range b.bs {
-		if b.forEach(offset, fn) {
-			ended = true
-			return
-		}
-
-		offset += b.tail
-	}
-
-	return
-}
-
-func newBlock() *block {
-	return &block{}
-}
-
-type block struct {
-	buf  [32]interface{}
-	tail int
-}
-
-func (b *block) get(idx int) interface{} {
-	return b.buf[idx]
-}
-
-func (b *block) append(val interface{}) (ok bool) {
-	if b.tail == 32 {
-		return
-	}
-
-	b.buf[b.tail] = val
-	b.tail++
-	return true
-}
-
-func (b *block) prepend(val interface{}) (ok bool) {
-	if b.tail == 32 {
-		return
-	}
-
-	b.shiftRight(0)
-	b.buf[0] = val
-	return true
-}
-
-func (b *block) insert(idx int, val interface{}) (overflow interface{}) {
-	if b.tail == 32 {
-		overflow = b.buf[31]
-	}
-
-	b.shiftRight(idx)
-	b.buf[idx] = val
-	return
-}
-
-func (b *block) forEach(offset int, fn func(i int, val interface{}) (end bool)) (ended bool) {
-	for i := 0; i < b.tail; i++ {
-		if fn(i+offset, b.buf[i]) {
+		if b.forEach(fn) {
 			ended = true
 			return
 		}
 	}
 
 	return
-}
-
-func (b *block) shiftRight(i int) {
-	var cval interface{}
-	end := b.tail
-	if end == 32 {
-		end = 31
-	} else {
-		b.tail++
-	}
-
-	for ; i <= end; i++ {
-		item := b.buf[i]
-		b.buf[i] = cval
-		cval = item
-	}
 }
