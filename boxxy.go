@@ -141,7 +141,7 @@ END:
 	b.incrementOffset(idx + 1)
 }
 
-// ForEach will iterate through each item within Boxie
+// ForEach will iterate through each item within Boxxy
 func (b *Boxxy) ForEach(fn func(i int, val interface{}) (end bool)) (ended bool) {
 	for _, b := range b.bs {
 		if b.forEach(fn) {

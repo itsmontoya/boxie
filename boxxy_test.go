@@ -29,16 +29,16 @@ func TestBasic(t *testing.T) {
 	//	})
 }
 
-func BenchmarkBoxieGet_10000(b *testing.B) {
-	benchmarkBoxieGet(b, 10000)
+func BenchmarkBoxxyGet_10000(b *testing.B) {
+	benchmarkBoxxyGet(b, 10000)
 }
 
-func BenchmarkBoxieGet_100000(b *testing.B) {
-	benchmarkBoxieGet(b, 100000)
+func BenchmarkBoxxyGet_100000(b *testing.B) {
+	benchmarkBoxxyGet(b, 100000)
 }
 
-func BenchmarkBoxieGet_1000000(b *testing.B) {
-	benchmarkBoxieGet(b, 1000000)
+func BenchmarkBoxxyGet_1000000(b *testing.B) {
+	benchmarkBoxxyGet(b, 1000000)
 }
 
 func BenchmarkSliceGet_10000(b *testing.B) {
@@ -53,7 +53,7 @@ func BenchmarkSliceGet_1000000(b *testing.B) {
 	benchmarkSliceGet(b, 1000000)
 }
 
-func BenchmarkBoxieForEach(b *testing.B) {
+func BenchmarkBoxxyForEach(b *testing.B) {
 	b.StopTimer()
 	bx := New()
 	for i := 0; i < b.N; i++ {
@@ -86,7 +86,7 @@ func BenchmarkSliceForEach(b *testing.B) {
 	b.ReportAllocs()
 }
 
-func BenchmarkBoxieAppend(b *testing.B) {
+func BenchmarkBoxxyAppend(b *testing.B) {
 	bx := New()
 	for i := 0; i < b.N; i++ {
 		bx.Append(i)
@@ -104,7 +104,7 @@ func BenchmarkSliceAppend(b *testing.B) {
 	b.ReportAllocs()
 }
 
-func BenchmarkBoxiePrepend(b *testing.B) {
+func BenchmarkBoxxyPrepend(b *testing.B) {
 	bx := New()
 	for i := 0; i < b.N; i++ {
 		bx.Prepend(i)
@@ -122,9 +122,9 @@ func BenchmarkSlicePrepend(b *testing.B) {
 	b.ReportAllocs()
 }
 
-func benchmarkBoxieGet(b *testing.B, n int) {
+func benchmarkBoxxyGet(b *testing.B, n int) {
 	b.StopTimer()
-	bx := populatedBoxie(n)
+	bx := populatedBoxxy(n)
 	b.StartTimer()
 
 	for i := 0; i < b.N; i++ {
@@ -150,7 +150,7 @@ func benchmarkSliceGet(b *testing.B, n int) {
 	b.ReportAllocs()
 }
 
-func populatedBoxie(n int) (b *Boxxy) {
+func populatedBoxxy(n int) (b *Boxxy) {
 	b = New()
 
 	for i := 0; i < n; i++ {
