@@ -1,9 +1,5 @@
 package boxxy
 
-import (
-//	"fmt"
-)
-
 // New will return a new instance of Boxxie
 func New() *Boxxy {
 	var b Boxxy
@@ -46,13 +42,20 @@ func (b *Boxxy) getContainingBucketIdx(idx int) (i, rem int) {
 
 func (b *Boxxy) shiftRight(idx int) {
 	var cb *block
-	for i, item := range b.bs[idx:] {
+	for i := idx; i < len(b.bs); i++ {
+		item := b.bs[i]
 		b.bs[i] = cb
 		cb = item
 	}
 
 	b.bs = append(b.bs, cb)
 	b.tail++
+}
+
+func (b *Boxxy) incrementOffset(start int) {
+	for i := start; i < len(b.bs); i++ {
+		b.bs[i].offset++
+	}
 }
 
 // Get will get an item at a provided index
@@ -81,12 +84,6 @@ func (b *Boxxy) Append(val interface{}) {
 
 		b.bs = append(b.bs, lb)
 		b.tail++
-	}
-}
-
-func (b *Boxxy) incrementOffset(start int) {
-	for i := start; i < len(b.bs); i++ {
-		b.bs[i].offset++
 	}
 }
 

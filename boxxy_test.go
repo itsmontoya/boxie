@@ -1,32 +1,32 @@
 package boxxy
 
-import (
-	"strconv"
-	"testing"
-
-	"fmt"
-)
+import "testing"
 
 var testVal interface{}
 
 func TestBasic(t *testing.T) {
 	b := New()
-	for i := 0; i < 54; i++ {
-		b.Append(strconv.Itoa(i))
+	for i := 0; i < (1024 * 1024); i++ {
+		b.Append(i)
 	}
 
-	b.Insert(51, "w00t")
-	b.Insert(2, "scoot")
-	b.Prepend("beginning")
-	fmt.Println("Get 53", b.Get(53))
-	fmt.Println("Get 51", b.Get(51))
-	fmt.Println("Get 2", b.Get(0))
-	fmt.Println(b.bs[1])
+	b.ForEach(func(i int, v interface{}) bool {
+		if i != v.(int) {
+			t.Fatalf("invalid value\nExpected: %v\nReturned: %v\n", i, v)
+		}
 
-	//	b.ForEach(func(i int, val interface{}) (end bool) {
-	//fmt.Println(i, val)
-	//		return
-	//	})
+		return false
+	})
+
+	b.Insert(51, "w00t")
+	if str := b.Get(51).(string); str != "w00t" {
+		t.Fatalf("invalid value\nExpected: %v\nReturned: %v\n", "w00t", str)
+	}
+
+	b.Prepend("beginning")
+	if str := b.Get(0).(string); str != "beginning" {
+		t.Fatalf("invalid value\nExpected: %v\nReturned: %v\n", "beginning", str)
+	}
 }
 
 func BenchmarkBoxxyGet_10000(b *testing.B) {
